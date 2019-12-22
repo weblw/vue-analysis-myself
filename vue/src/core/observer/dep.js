@@ -10,31 +10,34 @@ let uid = 0
  * directives subscribing to it.
  */
 export default class Dep {
-  static target: ?Watcher;
-  id: number;
-  subs: Array<Watcher>;
+  // 静态属性target 指向全局唯一的Watcher
+  static target: ?Watcher
+  id: number
+  // 存储Watcher的数组
+  subs: Array<Watcher>
 
-  constructor () {
+  constructor() {
     this.id = uid++
     this.subs = []
   }
 
-  addSub (sub: Watcher) {
+  addSub(sub: Watcher) {
     this.subs.push(sub)
   }
 
-  removeSub (sub: Watcher) {
+  removeSub(sub: Watcher) {
     remove(this.subs, sub)
   }
 
-  depend () {
+  depend() {
     if (Dep.target) {
       Dep.target.addDep(this)
     }
   }
 
-  notify () {
+  notify() {
     // stabilize the subscriber list first
+    // 遍历watcher，执行update
     const subs = this.subs.slice()
     for (let i = 0, l = subs.length; i < l; i++) {
       subs[i].update()
@@ -48,11 +51,12 @@ export default class Dep {
 Dep.target = null
 const targetStack = []
 
-export function pushTarget (_target: ?Watcher) {
-  if (Dep.target) targetStack.push(Dep.target)
+export function pushTarget(_target: ?Watcher) {
+  if (Dep.target) targetStack.push(Dep.target) // 压栈，为了恢复用
+  // 给Dep.target赋值当前watcher
   Dep.target = _target
 }
 
-export function popTarget () {
+export function popTarget() {
   Dep.target = targetStack.pop()
 }

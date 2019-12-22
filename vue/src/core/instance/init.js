@@ -30,7 +30,7 @@ export function initMixin(Vue: Class<Component>) {
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
-      // 组件
+      // 组件options合并
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
@@ -67,7 +67,7 @@ export function initMixin(Vue: Class<Component>) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-
+    // 组件初始化是没有传el的，直接退出程序
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
@@ -78,11 +78,12 @@ export function initInternalComponent(
   vm: Component,
   options: InternalComponentOptions
 ) {
+  // 子组件构造函数Sub的options
   const opts = (vm.$options = Object.create(vm.constructor.options))
   // doing this because it's faster than dynamic enumeration.
   // 占位符 vnode
   const parentVnode = options._parentVnode
-  // 子组件 父 vm 实例
+  // 子组件的父 vm 实例
   opts.parent = options.parent
   opts._parentVnode = parentVnode
   // 组件vnode配置

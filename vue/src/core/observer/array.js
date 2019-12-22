@@ -5,6 +5,7 @@
 
 import { def } from '../util/index'
 
+// 继承 Array
 const arrayProto = Array.prototype
 export const arrayMethods = Object.create(arrayProto)
 
@@ -21,10 +22,11 @@ const methodsToPatch = [
 /**
  * Intercept mutating methods and emit events
  */
-methodsToPatch.forEach(function (method) {
+// 重写Array方法
+methodsToPatch.forEach(function(method) {
   // cache original method
   const original = arrayProto[method]
-  def(arrayMethods, method, function mutator (...args) {
+  def(arrayMethods, method, function mutator(...args) {
     const result = original.apply(this, args)
     const ob = this.__ob__
     let inserted
@@ -37,8 +39,10 @@ methodsToPatch.forEach(function (method) {
         inserted = args.slice(2)
         break
     }
+    // 响应化插入的值
     if (inserted) ob.observeArray(inserted)
     // notify change
+    // 手动触发依赖通知
     ob.dep.notify()
     return result
   })

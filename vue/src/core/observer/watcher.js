@@ -23,26 +23,26 @@ let uid = 0
  * This is used for both the $watch() api and directives.
  */
 export default class Watcher {
-  vm: Component;
-  expression: string;
-  cb: Function;
-  id: number;
-  deep: boolean;
-  user: boolean;
-  computed: boolean;
-  sync: boolean;
-  dirty: boolean;
-  active: boolean;
-  dep: Dep;
-  deps: Array<Dep>;
-  newDeps: Array<Dep>;
-  depIds: SimpleSet;
-  newDepIds: SimpleSet;
-  before: ?Function;
-  getter: Function;
-  value: any;
+  vm: Component
+  expression: string
+  cb: Function
+  id: number
+  deep: boolean
+  user: boolean
+  computed: boolean
+  sync: boolean
+  dirty: boolean
+  active: boolean
+  dep: Dep
+  deps: Array<Dep>
+  newDeps: Array<Dep>
+  depIds: SimpleSet
+  newDepIds: SimpleSet
+  before: ?Function
+  getter: Function
+  value: any
 
-  constructor (
+  constructor(
     vm: Component,
     expOrFn: string | Function,
     cb: Function,
@@ -51,6 +51,7 @@ export default class Watcher {
   ) {
     this.vm = vm
     if (isRenderWatcher) {
+      // 渲染watcher
       vm._watcher = this
     }
     vm._watchers.push(this)
@@ -68,26 +69,28 @@ export default class Watcher {
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.computed // for computed watchers
+    // Dep实例数组
     this.deps = []
     this.newDeps = []
+    // this.deps的id
     this.depIds = new Set()
     this.newDepIds = new Set()
-    this.expression = process.env.NODE_ENV !== 'production'
-      ? expOrFn.toString()
-      : ''
+    this.expression =
+      process.env.NODE_ENV !== 'production' ? expOrFn.toString() : ''
     // parse expression for getter
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
-        this.getter = function () {}
-        process.env.NODE_ENV !== 'production' && warn(
-          `Failed watching path: "${expOrFn}" ` +
-          'Watcher only accepts simple dot-delimited paths. ' +
-          'For full control, use a function instead.',
-          vm
-        )
+        this.getter = function() {}
+        process.env.NODE_ENV !== 'production' &&
+          warn(
+            `Failed watching path: "${expOrFn}" ` +
+              'Watcher only accepts simple dot-delimited paths. ' +
+              'For full control, use a function instead.',
+            vm
+          )
       }
     }
     if (this.computed) {
@@ -101,7 +104,7 @@ export default class Watcher {
   /**
    * Evaluate the getter, and re-collect dependencies.
    */
-  get () {
+  get() {
     pushTarget(this)
     let value
     const vm = this.vm
@@ -116,10 +119,13 @@ export default class Watcher {
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
+      // 递归访问value，触发子项getter
       if (this.deep) {
         traverse(value)
       }
+      // 把Dep.target恢复到上一个状态，因为当前vm实例的数据依赖收集已经完成
       popTarget()
+      // 在每次添加完新的订阅，会移除掉旧的订阅
       this.cleanupDeps()
     }
     return value
@@ -128,12 +134,14 @@ export default class Watcher {
   /**
    * Add a dependency to this directive.
    */
-  addDep (dep: Dep) {
+  addDep(dep: Dep) {
     const id = dep.id
+    // 判断，防止重复添加
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
+        // 把当前watcher添加到数据持有的dep的subs中
         dep.addSub(this)
       }
     }
@@ -142,14 +150,17 @@ export default class Watcher {
   /**
    * Clean up for dependency collection.
    */
-  cleanupDeps () {
+  cleanupDeps() {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
       if (!this.newDepIds.has(dep.id)) {
+        // 遍历移除dep.subs数组中watcher的订阅
         dep.removeSub(this)
       }
     }
+    // 把 newDepIds 和 depIds 交换，newDeps 和 deps 交换
+    // 把 newDepIds 和 newDeps 清空
     let tmp = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
@@ -164,8 +175,9 @@ export default class Watcher {
    * Subscriber interface.
    * Will be called when a dependency changes.
    */
-  update () {
+  update() {
     /* istanbul ignore else */
+    // 计算属性
     if (this.computed) {
       // A computed property watcher has two modes: lazy and activated.
       // It initializes as lazy by default, and only becomes activated when
@@ -195,14 +207,16 @@ export default class Watcher {
    * Scheduler job interface.
    * Will be called by the scheduler.
    */
-  run () {
+  run() {
     if (this.active) {
       this.getAndInvoke(this.cb)
     }
   }
 
-  getAndInvoke (cb: Function) {
+  getAndInvoke(cb: Function) {
+    // 获取当前值
     const value = this.get()
+    // 满足新旧值不等、新值是对象类型、deep 模式任何一个条件
     if (
       value !== this.value ||
       // Deep watchers and watchers on Object/Arrays should fire even
@@ -222,6 +236,7 @@ export default class Watcher {
           handleError(e, this.vm, `callback for watcher "${this.expression}"`)
         }
       } else {
+        // 执行回调
         cb.call(this.vm, value, oldValue)
       }
     }
@@ -231,7 +246,7 @@ export default class Watcher {
    * Evaluate and return the value of the watcher.
    * This only gets called for computed property watchers.
    */
-  evaluate () {
+  evaluate() {
     if (this.dirty) {
       this.value = this.get()
       this.dirty = false
@@ -242,7 +257,7 @@ export default class Watcher {
   /**
    * Depend on this watcher. Only for computed property watchers.
    */
-  depend () {
+  depend() {
     if (this.dep && Dep.target) {
       this.dep.depend()
     }
@@ -251,7 +266,7 @@ export default class Watcher {
   /**
    * Remove self from all dependencies' subscriber list.
    */
-  teardown () {
+  teardown() {
     if (this.active) {
       // remove self from vm's watcher list
       // this is a somewhat expensive operation so we skip it

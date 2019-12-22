@@ -11,20 +11,16 @@ import {
 } from 'core/util/index'
 
 import { createEmptyVNode } from 'core/vdom/vnode'
-
-function ensureCtor (comp: any, base) {
-  if (
-    comp.__esModule ||
-    (hasSymbol && comp[Symbol.toStringTag] === 'Module')
-  ) {
+// 保证组件能够找到异步组件JS定义的组件对象
+function ensureCtor(comp: any, base) {
+  if (comp.__esModule || (hasSymbol && comp[Symbol.toStringTag] === 'Module')) {
     comp = comp.default
   }
-  return isObject(comp)
-    ? base.extend(comp)
-    : comp
+  // 如果是普通对象，调用extend转换成组件的构造函数
+  return isObject(comp) ? base.extend(comp) : comp
 }
 
-export function createAsyncPlaceholder (
+export function createAsyncPlaceholder(
   factory: Function,
   data: ?VNodeData,
   context: Component,
@@ -37,7 +33,7 @@ export function createAsyncPlaceholder (
   return node
 }
 
-export function resolveAsyncComponent (
+export function resolveAsyncComponent(
   factory: Function,
   baseCtor: Class<Component>,
   context: Component
@@ -58,9 +54,10 @@ export function resolveAsyncComponent (
     // already pending
     factory.contexts.push(context)
   } else {
-    const contexts = factory.contexts = [context]
+    const contexts = (factory.contexts = [context])
     let sync = true
 
+    // 遍历，拿到每一个调用异步组件的实例，执行forceUpdate，强制重新渲染页面
     const forceRender = () => {
       for (let i = 0, l = contexts.length; i < l; i++) {
         contexts[i].$forceUpdate()
@@ -72,39 +69,48 @@ export function resolveAsyncComponent (
       factory.resolved = ensureCtor(res, baseCtor)
       // invoke callbacks only if this is not a synchronous resolve
       // (async resolves are shimmed as synchronous during SSR)
+      // 判断sync
       if (!sync) {
         forceRender()
       }
     })
 
     const reject = once(reason => {
-      process.env.NODE_ENV !== 'production' && warn(
-        `Failed to resolve async component: ${String(factory)}` +
-        (reason ? `\nReason: ${reason}` : '')
-      )
+      process.env.NODE_ENV !== 'production' &&
+        warn(
+          `Failed to resolve async component: ${String(factory)}` +
+            (reason ? `\nReason: ${reason}` : '')
+        )
       if (isDef(factory.errorComp)) {
+        // error
         factory.error = true
         forceRender()
       }
     })
-
+    // 执行传入的工厂函数
     const res = factory(resolve, reject)
 
     if (isObject(res)) {
+      // Promise对象
       if (typeof res.then === 'function') {
-        // () => Promise
+        // () => Promise import导入的异步组件
         if (isUndef(factory.resolved)) {
           res.then(resolve, reject)
         }
-      } else if (isDef(res.component) && typeof res.component.then === 'function') {
+      } else if (
+        isDef(res.component) &&
+        typeof res.component.then === 'function'
+      ) {
+        // 高级异步组件
         res.component.then(resolve, reject)
-
+        // 是否定义了error组件
         if (isDef(res.error)) {
           factory.errorComp = ensureCtor(res.error, baseCtor)
         }
-
+        // 是否定义了loading组件
         if (isDef(res.loading)) {
           factory.loadingComp = ensureCtor(res.loading, baseCtor)
+          // delay判断
           if (res.delay === 0) {
             factory.loading = true
           } else {
@@ -116,7 +122,7 @@ export function resolveAsyncComponent (
             }, res.delay || 200)
           }
         }
-
+        // 判断res.timeout
         if (isDef(res.timeout)) {
           setTimeout(() => {
             if (isUndef(factory.resolved)) {
@@ -133,8 +139,6 @@ export function resolveAsyncComponent (
 
     sync = false
     // return in case resolved synchronously
-    return factory.loading
-      ? factory.loadingComp
-      : factory.resolved
+    return factory.loading ? factory.loadingComp : factory.resolved
   }
 }

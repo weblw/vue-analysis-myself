@@ -125,7 +125,7 @@ export function _createElement(
       vnode = new VNode(tag, data, children, undefined, undefined, context)
     }
   } else {
-    // direct component options / constructor 组件
+    // direct component options / constructor 创建 组件
     vnode = createComponent(tag, data, context, children)
   }
   if (Array.isArray(vnode)) {

@@ -31,6 +31,7 @@ export function initLifecycle(vm: Component) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
+    // 把当前组件实例push到父组件实例
     parent.$children.push(vm)
   }
   // 父组件实例
@@ -52,7 +53,9 @@ export function lifecycleMixin(Vue: Class<Component>) {
   // 首次渲染 数据改变 都会调用该方法
   Vue.prototype._update = function(vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
+    // 记录上一次的$el
     const prevEl = vm.$el
+    // 记录上一次渲染vnode
     const prevVnode = vm._vnode
     // 记录上一次 vm
     const prevActiveInstance = activeInstance
@@ -63,10 +66,10 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
     if (!prevVnode) {
-      // initial render
+      // initial render 首次渲染
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
-      // updates
+      // updates 更新
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
     // patch 完成之后 恢复activeInstance为上一个vm实例
@@ -103,9 +106,10 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // remove self from parent
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
+      // 删除当前实例
       remove(parent.$children, vm)
     }
-    // teardown watchers
+    // teardown watchers 删除watcher
     if (vm._watcher) {
       vm._watcher.teardown()
     }
@@ -121,8 +125,10 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // call the last hook...
     vm._isDestroyed = true
     // invoke destroy hooks on current rendered tree
+    // 调用当前vnode树上的触发子组件销毁钩子函数
     vm.__patch__(vm._vnode, null)
     // fire destroyed hook
+    // 先子后父执行销毁钩子函数
     callHook(vm, 'destroyed')
     // turn off all instance listeners.
     vm.$off()
@@ -196,12 +202,14 @@ export function mountComponent(
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // 实例化渲染watcher
   new Watcher(
     vm,
     updateComponent,
     noop,
     {
       before() {
+        // 组件mounted之后才会调用
         if (vm._isMounted) {
           callHook(vm, 'beforeUpdate')
         }
@@ -215,6 +223,7 @@ export function mountComponent(
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
     vm._isMounted = true
+    // 这里指的是通过new Vue初始化的mount,而不是组件的mount
     callHook(vm, 'mounted')
   }
   return vm

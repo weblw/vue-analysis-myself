@@ -373,7 +373,7 @@ export function mergeOptions(
   normalizeInject(child, vm)
   normalizeDirectives(child)
   const extendsFrom = child.extends
-  // 递归调用
+  // 递归调用合并extends和mixins
   if (extendsFrom) {
     parent = mergeOptions(parent, extendsFrom, vm)
   }
@@ -418,10 +418,15 @@ export function resolveAsset(
   }
   const assets = options[type]
   // check local registration variations first
+  // 通过id获取
   if (hasOwn(assets, id)) return assets[id]
+  // 驼峰变形
   const camelizedId = camelize(id)
+  // 通过驼峰变形拿
   if (hasOwn(assets, camelizedId)) return assets[camelizedId]
+  // 首字母大写
   const PascalCaseId = capitalize(camelizedId)
+  // 通过首字母大写拿
   if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId]
   // fallback to prototype chain
   const res = assets[id] || assets[camelizedId] || assets[PascalCaseId]

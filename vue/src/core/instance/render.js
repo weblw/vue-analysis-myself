@@ -86,6 +86,7 @@ export function renderMixin(Vue: Class<Component>) {
 
   Vue.prototype._render = function(): VNode {
     const vm: Component = this
+    // _parentVnode当前组件的父vnode
     const { render, _parentVnode } = vm.$options
 
     // reset _rendered flag on slots for duplicate slot check
@@ -144,7 +145,8 @@ export function renderMixin(Vue: Class<Component>) {
       }
       vnode = createEmptyVNode()
     }
-    // set parent parent指向占位符vnode
+    // set parent
+    // vnode.parent指向占位符vnode，也就是vm.$vnode，它们构成父子关系
     vnode.parent = _parentVnode
     return vnode
   }

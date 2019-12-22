@@ -43,6 +43,7 @@ const componentVNodeHooks = {
         vnode,
         activeInstance
       ))
+      // 挂载子组件
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
@@ -63,6 +64,7 @@ const componentVNodeHooks = {
     const { context, componentInstance } = vnode
     if (!componentInstance._isMounted) {
       componentInstance._isMounted = true
+      // 组件的mount,执行顺序,先子后父
       callHook(componentInstance, 'mounted')
     }
     if (vnode.data.keepAlive) {
@@ -133,11 +135,12 @@ export function createComponent(
       return createAsyncPlaceholder(asyncFactory, data, context, children, tag)
     }
   }
-
+  // 初始化data
   data = data || {}
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // 解析构造函数选项
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events
@@ -148,7 +151,7 @@ export function createComponent(
   // extract props
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 
-  // functional component
+  // functional component 函数组件
   if (isTrue(Ctor.options.functional)) {
     return createFunctionalComponent(Ctor, propsData, data, context, children)
   }
@@ -159,7 +162,7 @@ export function createComponent(
   // replace with listeners with .native modifier
   // so it gets processed during parent component patch.
   data.on = data.nativeOn
-
+  // slot
   if (isTrue(Ctor.options.abstract)) {
     // abstract components do not keep anything
     // other than props & listeners & slot
@@ -179,6 +182,7 @@ export function createComponent(
   // return a placeholder vnode
   const name = Ctor.options.name || tag
   // 创建组件vonde 没有children 但是有 componentOptions 包含所有属性
+  // 实例化vonde并返回
   const vnode = new VNode(
     // 组件 name 特殊标记
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
@@ -207,9 +211,11 @@ export function createComponentInstanceForVnode(
   parent: any // activeInstance in lifecycle state
 ): Component {
   const options: InternalComponentOptions = {
+    // 表示他是一个组件
     _isComponent: true,
     // 占位符节点
     _parentVnode: vnode,
+    // 当前激活的组件实例
     parent
   }
   // check inline-template render functions
@@ -218,7 +224,7 @@ export function createComponentInstanceForVnode(
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
-  // 通过组件构造器 创建组件实例
+  // 通过子组件构造器 创建组件实例
   return new vnode.componentOptions.Ctor(options)
 }
 

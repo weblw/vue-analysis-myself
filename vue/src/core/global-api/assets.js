@@ -22,7 +22,7 @@ export function initAssetRegisters(Vue: GlobalAPI) {
         }
         if (type === 'component' && isPlainObject(definition)) {
           definition.name = definition.name || id
-          // 转化成构造器
+          // 将definition转化成构造器
           definition = this.options._base.extend(definition)
         }
         if (type === 'directive' && typeof definition === 'function') {

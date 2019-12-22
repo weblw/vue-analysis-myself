@@ -119,9 +119,13 @@ export function createPatchFunction(backend) {
   let creatingElmInVPre = 0
 
   function createElm(
+    // 渲染vnode
     vnode,
+    // 插入队列
     insertedVnodeQueue,
+    // 挂载vnode
     parentElm,
+    // 兄弟节点
     refElm,
     nested,
     ownerArray,
@@ -137,20 +141,22 @@ export function createPatchFunction(backend) {
     }
 
     vnode.isRootInsert = !nested // for transition enter check
-    // 创建组件
+    // 尝试创建子组件
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
+      // 如果组件创建，直接返回
       return
     }
 
     const data = vnode.data
     const children = vnode.children
     const tag = vnode.tag
+    // 判断vnode是否包含tag
     if (isDef(tag)) {
       if (process.env.NODE_ENV !== 'production') {
         if (data && data.pre) {
           creatingElmInVPre++
         }
-        // 组件没有注册报错
+        // 对tag做合法性校验 组件没有注册报错
         if (isUnknownElement(vnode, creatingElmInVPre)) {
           warn(
             'Unknown custom element: <' +
@@ -162,11 +168,10 @@ export function createPatchFunction(backend) {
           )
         }
       }
-
       // 当前元素
       vnode.elm = vnode.ns
         ? nodeOps.createElementNS(vnode.ns, tag)
-        : nodeOps.createElement(tag, vnode)
+        : nodeOps.createElement(tag, vnode) // 创建占位符元素
       setScope(vnode)
 
       /* istanbul ignore if */
@@ -194,7 +199,7 @@ export function createPatchFunction(backend) {
         if (isDef(data)) {
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
-        // 将节点插入DOM
+        // 将节点插入DOM 先子后父
         insert(parentElm, vnode.elm, refElm)
       }
 
@@ -208,16 +213,17 @@ export function createPatchFunction(backend) {
     } else {
       // 文本节点
       vnode.elm = nodeOps.createTextNode(vnode.text)
-      // 当为组件时 parentElm 为空，不进行DOM插入操作
       insert(parentElm, vnode.elm, refElm)
     }
   }
 
   function createComponent(vnode, insertedVnodeQueue, parentElm, refElm) {
     let i = vnode.data
+    // 对vnode.data判断
     if (isDef(i)) {
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive
       if (isDef((i = i.hook)) && isDef((i = i.init))) {
+        // init钩子函数
         i(vnode, false /* hydrating */)
       }
       // after calling the init hook, if the vnode is a child component
@@ -227,6 +233,7 @@ export function createPatchFunction(backend) {
       if (isDef(vnode.componentInstance)) {
         initComponent(vnode, insertedVnodeQueue)
         // 组件插入挂载 先子后父 插入组件
+        // 当为组件时 parentElm 为空，不进行DOM插入操作
         insert(parentElm, vnode.elm, refElm)
         if (isTrue(isReactivated)) {
           reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm)
@@ -280,6 +287,7 @@ export function createPatchFunction(backend) {
   }
 
   function insert(parent, elm, ref) {
+    // 如果parent不存在,不进行任何操作
     if (isDef(parent)) {
       if (isDef(ref)) {
         if (ref.parentNode === parent) {
@@ -294,7 +302,7 @@ export function createPatchFunction(backend) {
   function createChildren(vnode, children, insertedVnodeQueue) {
     if (Array.isArray(children)) {
       if (process.env.NODE_ENV !== 'production') {
-        // 递归检验
+        // key值重复校验
         checkDuplicateKeys(children)
       }
       // 数组递归调用
@@ -302,6 +310,7 @@ export function createPatchFunction(backend) {
         createElm(
           children[i],
           insertedVnodeQueue,
+          // 父容器DOM节点
           vnode.elm,
           null,
           true,
@@ -324,11 +333,13 @@ export function createPatchFunction(backend) {
 
   function invokeCreateHooks(vnode, insertedVnodeQueue) {
     for (let i = 0; i < cbs.create.length; ++i) {
+      // 执行所有create钩子函数
       cbs.create[i](emptyNode, vnode)
     }
     i = vnode.data.hook // Reuse variable
     if (isDef(i)) {
       if (isDef(i.create)) i.create(emptyNode, vnode)
+      // 把vnode push到insertedVnodeQueue
       if (isDef(i.insert)) insertedVnodeQueue.push(vnode)
     }
   }
@@ -787,19 +798,21 @@ export function createPatchFunction(backend) {
   }
   // 返回patch方法
   return function patch(oldVnode, vnode, hydrating, removeOnly) {
-    // 删除逻辑
+    // 如果没有传vnode和oldVnode 执行删除逻辑
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
     }
 
     let isInitialPatch = false
+    // 插入vnode队列
     const insertedVnodeQueue = []
 
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
-      // 组件渲染
+      // 创建新根节点
       isInitialPatch = true
+      // 创建组件走这里的逻辑
       createElm(vnode, insertedVnodeQueue)
     } else {
       const isRealElement = isDef(oldVnode.nodeType)
@@ -812,6 +825,7 @@ export function createPatchFunction(backend) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
+          // 服务端渲染
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
             oldVnode.removeAttribute(SSR_ATTR)
             hydrating = true
@@ -838,6 +852,7 @@ export function createPatchFunction(backend) {
 
         // replacing existing element
         const oldElm = oldVnode.elm
+        // 父节点 挂载节点
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node

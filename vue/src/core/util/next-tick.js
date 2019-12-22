@@ -8,7 +8,8 @@ import { isIOS, isNative } from './env'
 const callbacks = []
 let pending = false
 
-function flushCallbacks () {
+// 遍历callbacks，执行对应回调函数
+function flushCallbacks() {
   pending = false
   const copies = callbacks.slice(0)
   callbacks.length = 0
@@ -34,15 +35,18 @@ let useMacroTask = false
 // in IE. The only polyfill that consistently queues the callback after all DOM
 // events triggered in the same loop is by using MessageChannel.
 /* istanbul ignore if */
+// 是否支持setImmediate
 if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
   macroTimerFunc = () => {
     setImmediate(flushCallbacks)
   }
-} else if (typeof MessageChannel !== 'undefined' && (
-  isNative(MessageChannel) ||
-  // PhantomJS
-  MessageChannel.toString() === '[object MessageChannelConstructor]'
-)) {
+} else if (
+  // 是否支持MessageChannel
+  typeof MessageChannel !== 'undefined' &&
+  (isNative(MessageChannel) ||
+    // PhantomJS
+    MessageChannel.toString() === '[object MessageChannelConstructor]')
+) {
   const channel = new MessageChannel()
   const port = channel.port2
   channel.port1.onmessage = flushCallbacks
@@ -50,6 +54,7 @@ if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
     port.postMessage(1)
   }
 } else {
+  // 降级为setTimeout 0
   /* istanbul ignore next */
   macroTimerFunc = () => {
     setTimeout(flushCallbacks, 0)
@@ -58,6 +63,7 @@ if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
 
 // Determine microtask defer implementation.
 /* istanbul ignore next, $flow-disable-line */
+// 判断是否支持promise
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   microTimerFunc = () => {
@@ -78,17 +84,22 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
  * Wrap a function so that if any code inside triggers state change,
  * the changes are queued using a (macro) task instead of a microtask.
  */
-export function withMacroTask (fn: Function): Function {
-  return fn._withTask || (fn._withTask = function () {
-    useMacroTask = true
-    const res = fn.apply(null, arguments)
-    useMacroTask = false
-    return res
-  })
+// 确保函数执行过程中对数据任意的修改，触发变化执行 nextTick 的时候强制走 macroTimerFunc
+export function withMacroTask(fn: Function): Function {
+  return (
+    fn._withTask ||
+    (fn._withTask = function() {
+      useMacroTask = true
+      const res = fn.apply(null, arguments)
+      useMacroTask = false
+      return res
+    })
+  )
 }
 
-export function nextTick (cb?: Function, ctx?: Object) {
+export function nextTick(cb?: Function, ctx?: Object) {
   let _resolve
+  // 将传入的回调函数封装后压栈
   callbacks.push(() => {
     if (cb) {
       try {
@@ -102,6 +113,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
   })
   if (!pending) {
     pending = true
+    // 判断执行macroTimerFunc还是microTimerFunc
     if (useMacroTask) {
       macroTimerFunc()
     } else {
@@ -109,6 +121,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
     }
   }
   // $flow-disable-line
+  // 如果没有传回调函数，返回一个promise
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
       _resolve = resolve

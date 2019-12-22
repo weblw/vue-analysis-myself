@@ -33,6 +33,7 @@ export function initExtend(Vue: GlobalAPI) {
     }
     // 子构造函数
     const Sub = function VueComponent(options) {
+      // 执行初始化流程
       this._init(options)
     }
     // 原型继承
@@ -46,7 +47,7 @@ export function initExtend(Vue: GlobalAPI) {
     // For props and computed properties, we define the proxy getters on
     // the Vue instances at extension time, on the extended prototype. This
     // avoids Object.defineProperty calls for each instance created.
-    // 初始化
+    // 初始化 props和computed
     if (Sub.options.props) {
       initProps(Sub)
     }
@@ -66,7 +67,7 @@ export function initExtend(Vue: GlobalAPI) {
     ASSET_TYPES.forEach(function(type) {
       Sub[type] = Super[type]
     })
-    // enable recursive self-lookup
+    // enable recursive self-lookup 启用递归自查找
     if (name) {
       Sub.options.components[name] = Sub
     }
