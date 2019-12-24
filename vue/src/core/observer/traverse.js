@@ -23,12 +23,14 @@ function _traverse (val: any, seen: SimpleSet) {
     return
   }
   if (val.__ob__) {
+    // 记录子响应式对象的id，避免重复访问
     const depId = val.__ob__.dep.id
     if (seen.has(depId)) {
       return
     }
     seen.add(depId)
   }
+  // 深层递归遍历
   if (isA) {
     i = val.length
     while (i--) _traverse(val[i], seen)

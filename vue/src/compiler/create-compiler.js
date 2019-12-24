@@ -37,7 +37,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
           }
         }
       }
-
+      // 处理配置参数
       const compiled = baseCompile(template, finalOptions)
       if (process.env.NODE_ENV !== 'production') {
         errors.push.apply(errors, detectErrors(compiled.ast))
@@ -46,7 +46,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
       compiled.tips = tips
       return compiled
     }
-
+    // 返回compile方法属性和compileToFunctions属性
     return {
       compile,
       compileToFunctions: createCompileToFunctionFn(compile)

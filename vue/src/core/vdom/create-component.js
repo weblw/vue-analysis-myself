@@ -49,7 +49,9 @@ const componentVNodeHooks = {
   },
 
   prepatch(oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
+    // vnode组件配置
     const options = vnode.componentOptions
+    // vnode组件实例
     const child = (vnode.componentInstance = oldVnode.componentInstance)
     updateChildComponent(
       child,

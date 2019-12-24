@@ -200,6 +200,7 @@ export default class Watcher {
         })
       }
     } else if (this.sync) {
+      // 当前Tick中立即执行回调函数
       this.run()
     } else {
       queueWatcher(this)
