@@ -343,9 +343,11 @@ export function callHook(vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
   const handlers = vm.$options[hook]
+  // 遍历执行钩子函数
   if (handlers) {
     for (let i = 0, j = handlers.length; i < j; i++) {
       try {
+        // 把当前组件实例座位函数执行上下文
         handlers[i].call(vm)
       } catch (e) {
         handleError(e, vm, `${hook} hook`)

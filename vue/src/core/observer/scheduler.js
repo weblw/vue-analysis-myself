@@ -52,6 +52,7 @@ function flushSchedulerQueue() {
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 遍历，拿到对应watcher
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
@@ -101,7 +102,7 @@ function callUpdatedHooks(queue) {
   while (i--) {
     const watcher = queue[i]
     const vm = watcher.vm
-    // 满足当前watcher为vm._watcher并且组件已经mounted
+    // 满足当前watcher为渲染watcher 并且组件已经mounted
     if (vm._watcher === watcher && vm._isMounted) {
       callHook(vm, 'updated')
     }

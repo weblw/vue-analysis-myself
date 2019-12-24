@@ -63,7 +63,7 @@ export function resolveAsyncComponent(
         contexts[i].$forceUpdate()
       }
     }
-
+    // once 包装，确保只执行一次
     const resolve = once((res: Object | Class<Component>) => {
       // cache resolved
       factory.resolved = ensureCtor(res, baseCtor)
@@ -74,7 +74,7 @@ export function resolveAsyncComponent(
         forceRender()
       }
     })
-
+    // once 包装，确保只执行一次
     const reject = once(reason => {
       process.env.NODE_ENV !== 'production' &&
         warn(
@@ -87,7 +87,7 @@ export function resolveAsyncComponent(
         forceRender()
       }
     })
-    // 执行传入的工厂函数
+    // 执行传入的组件工厂函数
     const res = factory(resolve, reject)
 
     if (isObject(res)) {

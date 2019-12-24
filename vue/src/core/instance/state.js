@@ -45,6 +45,7 @@ export function proxy(target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 初始化状态
 export function initState(vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -72,6 +73,7 @@ function initProps(vm: Component, propsOptions: Object) {
   if (!isRoot) {
     toggleObserving(false)
   }
+  // 遍历props配置 响应化 属性代理
   for (const key in propsOptions) {
     keys.push(key)
     const value = validateProp(key, propsOptions, propsData, vm)
@@ -171,19 +173,24 @@ const computedWatcherOptions = { computed: true }
 
 function initComputed(vm: Component, computed: Object) {
   // $flow-disable-line
+  // 创建_computedWatchers 为一个空对象
   const watchers = (vm._computedWatchers = Object.create(null))
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
 
+  // 遍历computed对象
   for (const key in computed) {
     const userDef = computed[key]
+    // 获取getter函数
     const getter = typeof userDef === 'function' ? userDef : userDef.get
+    // 拿不到getter报错
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(`Getter is missing for computed property "${key}".`, vm)
     }
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // 不是服务端渲染 创建computed watcher，传入computedWatcherOptions属性
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -198,6 +205,7 @@ function initComputed(vm: Component, computed: Object) {
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
+      // computed key被占用的话，报错
       if (key in vm.$data) {
         warn(`The computed property "${key}" is already defined in data.`, vm)
       } else if (vm.$options.props && key in vm.$options.props) {
@@ -237,13 +245,17 @@ export function defineComputed(
       )
     }
   }
+  // 给计算属性的key添加getter和setter
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
 function createComputedGetter(key) {
+  // 计算属性的getter
   return function computedGetter() {
+    // 计算属性watcher
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
+      // 让渲染watcher订阅computed key的变化
       watcher.depend()
       return watcher.evaluate()
     }
@@ -276,9 +288,11 @@ function initMethods(vm: Component, methods: Object) {
 }
 
 function initWatch(vm: Component, watch: Object) {
+  // 遍历watch 拿到handler
   for (const key in watch) {
     const handler = watch[key]
     if (Array.isArray(handler)) {
+      // handler是数组，遍历
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
       }
@@ -294,6 +308,7 @@ function createWatcher(
   handler: any,
   options?: Object
 ) {
+  // 判断handler类型 拿到最终的回调函数
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
@@ -340,15 +355,19 @@ export function stateMixin(Vue: Class<Component>) {
     options?: Object
   ): Function {
     const vm: Component = this
+    // 如果cb是一个对象
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
     options.user = true
+    // 实例化user watcher
     const watcher = new Watcher(vm, expOrFn, cb, options)
+    // immediate 直接执行回调
     if (options.immediate) {
       cb.call(vm, watcher.value)
     }
+    // 返回 unwatchFn
     return function unwatchFn() {
       watcher.teardown()
     }

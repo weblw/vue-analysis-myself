@@ -134,6 +134,7 @@ export function observe(value: any, asRootData: ?boolean): Observer | void {
     ob = new Observer(value)
   }
   if (asRootData && ob) {
+    // 根节点data，并且是响应式数据
     ob.vmCount++
   }
   return ob

@@ -94,6 +94,7 @@ export default class Watcher {
       }
     }
     if (this.computed) {
+      // computed watcher不会马上求值
       this.value = undefined
       this.dep = new Dep()
     } else {
@@ -188,10 +189,12 @@ export default class Watcher {
         // so we simply mark the watcher as dirty. The actual computation is
         // performed just-in-time in this.evaluate() when the computed property
         // is accessed.
+        // 没有人订阅这个computed watcher
         this.dirty = true
       } else {
         // In activated mode, we want to proactively perform the computation
         // but only notify our subscribers when the value has indeed changed.
+        // 渲染watcher订阅了计算属性
         this.getAndInvoke(() => {
           this.dep.notify()
         })
@@ -213,6 +216,7 @@ export default class Watcher {
     }
   }
 
+  // 重新计算
   getAndInvoke(cb: Function) {
     // 获取当前值
     const value = this.get()
@@ -236,7 +240,7 @@ export default class Watcher {
           handleError(e, this.vm, `callback for watcher "${this.expression}"`)
         }
       } else {
-        // 执行回调
+        // 执行回调 触发渲染watcher的重新渲染
         cb.call(this.vm, value, oldValue)
       }
     }
@@ -247,6 +251,7 @@ export default class Watcher {
    * This only gets called for computed property watchers.
    */
   evaluate() {
+    // 避免重复计算 在计算过程中会让computed watcher订阅计算属性依赖data的变化
     if (this.dirty) {
       this.value = this.get()
       this.dirty = false
