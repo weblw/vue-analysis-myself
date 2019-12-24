@@ -30,7 +30,7 @@ export function initMixin(Vue: Class<Component>) {
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
-      // 组件options合并
+      // 组件 options 合并
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
@@ -67,7 +67,7 @@ export function initMixin(Vue: Class<Component>) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-    // 组件初始化是没有传el的，直接退出程序
+    // 组件初始化是没有传el的，直接退出程序  组件是在自己的init钩子函数里面完成挂载的
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

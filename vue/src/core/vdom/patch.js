@@ -291,6 +291,7 @@ export function createPatchFunction(backend) {
     if (isDef(parent)) {
       if (isDef(ref)) {
         if (ref.parentNode === parent) {
+          // 兄弟节点
           nodeOps.insertBefore(parent, elm, ref)
         }
       } else {
@@ -338,6 +339,7 @@ export function createPatchFunction(backend) {
     }
     i = vnode.data.hook // Reuse variable
     if (isDef(i)) {
+      // 执行所有create钩子函数
       if (isDef(i.create)) i.create(emptyNode, vnode)
       // 把vnode push到insertedVnodeQueue
       if (isDef(i.insert)) insertedVnodeQueue.push(vnode)
@@ -850,7 +852,7 @@ export function createPatchFunction(backend) {
           oldVnode = emptyNodeAt(oldVnode)
         }
 
-        // replacing existing element
+        // replacing existing element 替换现有元素
         const oldElm = oldVnode.elm
         // 父节点 挂载节点
         const parentElm = nodeOps.parentNode(oldElm)

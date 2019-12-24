@@ -16,6 +16,8 @@ export function initExtend(Vue: GlobalAPI) {
   /**
    * Class inheritance
    */
+  // 构造一个vue的子类
+  // 采用原型继承的方式把一个纯对象转换一个继承于 Vue 的构造器 Sub 并返回
   Vue.extend = function(extendOptions: Object): Function {
     extendOptions = extendOptions || {}
     const Super = this

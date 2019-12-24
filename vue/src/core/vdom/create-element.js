@@ -101,6 +101,7 @@ export function _createElement(
   // tag类型判断，string 或者 component
   if (typeof tag === 'string') {
     let Ctor
+    // 命名空间
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
     // 是否是平台保留标签
     if (config.isReservedTag(tag)) {
@@ -116,12 +117,13 @@ export function _createElement(
     } else if (
       isDef((Ctor = resolveAsset(context.$options, 'components', tag)))
     ) {
-      // component 组件
+      // 如果是已经注册的组件名 创建 component 组件
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
+      // 创建一个未知标签的vnode
       vnode = new VNode(tag, data, children, undefined, undefined, context)
     }
   } else {

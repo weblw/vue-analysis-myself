@@ -383,6 +383,7 @@ export function mergeOptions(
     }
   }
   const options = {}
+  // 遍历parent，调用mergeField
   let key
   for (key in parent) {
     mergeField(key)

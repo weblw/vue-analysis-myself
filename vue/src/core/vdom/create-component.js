@@ -109,6 +109,7 @@ export function createComponent(
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // 构造子类构造函数
   if (isObject(Ctor)) {
     // 新构造器  继承构造器
     Ctor = baseCtor.extend(Ctor)
@@ -228,6 +229,7 @@ export function createComponentInstanceForVnode(
   return new vnode.componentOptions.Ctor(options)
 }
 
+// 把 componentVNodeHooks 的钩子函数合并到 data.hook 中
 function installComponentHooks(data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {
